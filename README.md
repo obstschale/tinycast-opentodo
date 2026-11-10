@@ -104,8 +104,13 @@ erscheinen automatisch. Der als `default` markierte Workspace ist mit „(Standa
 die Vorauswahl.
 
 Die **letzte Auswahl wird in `LocalStorage` gemerkt** und beim nächsten Start wiederhergestellt. Im
-Normalfall tippst du also einfach los; nur beim Wechsel einmal das Dropdown antippen. Der aktive
+Normalfall tippst du also einfach los; nur beim Wechsel einmal das Dropdown öffnen. Der aktive
 Workspace steht zusätzlich im Untertitel der Zeile und in der Erfolgs-Toast.
+
+**Per Tastatur:** **⌘P** öffnet das Dropdown (Raycast-/Tinycast-Standard für Suchleisten-Dropdowns),
+dann mit **↑/↓** oder durch Tippen filtern und mit **↵** übernehmen, **esc** bricht ab. `tab` wechselt
+in Tinycast zwischen den Screens, nicht in das Dropdown. Das Dropdown hat kein eigenes
+`shortcut`-Prop, die Taste ist also nicht konfigurierbar.
 
 Beim Anlegen bekommt `ot add` ein `--workspace <id>` (ID statt Name, damit Umbenennungen nichts
 kaputtmachen). Ohne Auswahl nutzt `ot` seinen Default-Workspace.

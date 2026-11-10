@@ -20,7 +20,7 @@ Bundle muss daher nur diese Module `require`n; eigene `node_modules` sind nicht 
 
 | Datei | Zweck |
 | --- | --- |
-| `package.json` | Manifest: ein `view`-Kommando `add-todo`, zwei Preferences |
+| `package.json` | Manifest: ein `view`-Kommando `add-todo`, zwei Preferences, `version` |
 | `src/add-todo.tsx` | React-`List` mit voller Suchleiste; `↵` ruft `addTodo` |
 | `src/ot.ts` | Einzige Stelle, die `ot` aufruft; Workspace-Liste, Pfad-Auflösung, `AddResult` |
 | `assets/icon.png` | offizielles OpenTodo-Icon (siehe unten) |
@@ -116,6 +116,13 @@ Version mit Datum überführen.
 
 Das gilt ausdrücklich auch für neue Kommandos, neue Preferences, Änderungen am `ot`-Aufruf und
 Änderungen am Manifest. Ein PR ohne CHANGELOG-Eintrag ist unvollständig.
+
+**Release (Minor-/Patch-Version):** Den `Unreleased`-Abschnitt in `## [X.Y.Z] – YYYY-MM-DD`
+überführen, einen frischen leeren `Unreleased`-Abschnitt anlegen und die Vergleichslinks am Ende
+aktualisieren. Dabei müssen immer zusammenpassen: `version` in `package.json` (danach
+`npm install --package-lock-only` für `package-lock.json`), `CHANGELOG.md`, `dist/` (via `npm run build`)
+und der Git-Tag `vX.Y.Z` mit GitHub Release, dessen Notizen dem CHANGELOG-Abschnitt entsprechen.
+Zuletzt `main` pushen, dann Tag/Release erzeugen.
 
 ## Sprache & Stil
 

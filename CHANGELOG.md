@@ -7,6 +7,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung 
 
 ## [Unreleased]
 
+_Noch keine Änderungen. Neue Features, Verhaltensänderungen und Fixes kommen hier rein._
+
+## [0.2.0] – 2026-11-10
+
 ### Added
 
 - Workspace-Dropdown in der Suchleiste: Liste kommt dynamisch aus `ot workspaces --json`, der
@@ -15,6 +19,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung 
   wird als Cache gespeichert, damit die Extension auch offline nutzbar bleibt.
 - `ot add` erhält `--workspace <id>` für den gewählten Workspace; aktiver Workspace erscheint im
   Untertitel der Zeile und in der Erfolgs-Toast.
+
+### Changed
+
+- Das Kommando ist unabhängig vom `ot`-Profil-Default: ohne Cache/Liste wird kein `--workspace`
+  übergeben, eine veraltete gemerkte ID wird beim nächsten erfolgreichen Laden verworfen.
+- `package.json` führt jetzt eine `version`; ein Release besteht aus Version + CHANGELOG-Abschnitt +
+  Git-Tag/GitHub Release.
 
 ## [0.1.0] – 2026-11-10
 
@@ -37,5 +48,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung 
   stabil, um Shortcuts und Preferences nicht zu verwaisen.
 - Kein hartkodierter lokaler Pfad mehr im Manifest; `author` ist der öffentliche GitHub-Handle.
 
-[Unreleased]: https://github.com/obstschale/tinycast-opentodo/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/obstschale/tinycast-opentodo/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/obstschale/tinycast-opentodo/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/obstschale/tinycast-opentodo/releases/tag/v0.1.0

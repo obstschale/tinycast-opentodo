@@ -1,0 +1,71 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "opentodo-quick-add",
+  "title": "Open Todo Quick Add",
+  "description": "Fügt ein Todo aus dem Tinycast-Launcher per `ot add --natural` zu Open Todo hinzu.",
+  "icon": "icon.png",
+  "author": "obstschale",
+  "license": "MIT",
+  "platforms": [
+    "macOS"
+  ],
+  "categories": [
+    "Productivity"
+  ],
+  "keywords": [
+    "todo",
+    "opentodo",
+    "ot",
+    "quick add",
+    "aufgabe"
+  ],
+  "commands": [
+    {
+      "name": "add-todo",
+      "title": "Todo hinzufügen",
+      "subtitle": "Open Todo",
+      "description": "Öffnet eine Suchleiste in voller Breite und fügt den eingetippten Text per `ot add --natural` zu Open Todo hinzu. Unterstützt #Projekt, @Label, p1–p4, morgen, every … und remind me …",
+      "mode": "view",
+      "keywords": [
+        "todo",
+        "aufgabe",
+        "task",
+        "ot",
+        "open todo",
+        "quick add"
+      ]
+    }
+  ],
+  "preferences": [
+    {
+      "name": "otPath",
+      "type": "textfield",
+      "required": false,
+      "title": "Pfad zum ot-Client",
+      "description": "Optionaler absoluter Pfad zum `ot`-Binary. GUI-Apps übernehmen nicht das PATH des Terminals. Leer lassen, damit die Extension `ot` über PATH und die üblichen Installationsorte (~/go/bin/bin/ot, ~/go/bin/ot, /opt/homebrew/bin/ot, /usr/local/bin/ot) findet.",
+      "placeholder": "Leer lassen oder /pfad/zu/ot",
+      "default": ""
+    },
+    {
+      "name": "lang",
+      "type": "textfield",
+      "required": false,
+      "title": "Sprachen für --natural",
+      "description": "Kommagetrennte Sprachcodes, die als `--lang` an `ot add --natural` übergeben werden. Standard `de,en` (Deutsch + Englisch; Englisch ist immer aktiv). Ein leerer Wert verwendet ebenfalls `de,en`.",
+      "placeholder": "de,en",
+      "default": "de,en"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.104.20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.2.0",
+    "typescript": "^5.9.0"
+  },
+  "scripts": {
+    "build": "ray build -e dist -o dist -I",
+    "dev": "ray develop"
+  }
+}

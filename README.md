@@ -10,6 +10,10 @@ ot add --natural "<deine Eingabe>" --workspace <workspace-id> --lang de,en
 
 Repository: <https://github.com/obstschale/tinycast-opentodo>
 
+![Suchleiste in voller Breite mit geöffnetem Workspace-Dropdown](docs/screenshot.png)
+
+*Todo eintippen, mit **⌘P** den Workspace wählen, **↵** – das Todo landet direkt in Open Todo.*
+
 ## Warum ein `view`-Kommando?
 
 `add-todo` ist ein **`view`-Kommando mit eigener Suchleiste** – bewusst ohne `arguments` im Manifest:

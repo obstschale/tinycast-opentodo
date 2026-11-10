@@ -7,7 +7,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung 
 
 ## [Unreleased]
 
-_Noch keine Änderungen. Neue Features, Verhaltensänderungen und Fixes kommen hier rein._
+### Added
+
+- Screenshot in der README (`docs/screenshot.png`): Suchleiste in voller Breite mit geöffnetem
+  Workspace-Dropdown. Die Workspace-Namen im Bild sind generisch („Personal (Standard)", „Arbeit"),
+  damit keine Kontodaten ins öffentliche Repo gelangen.
 
 ## [0.2.0] – 2026-11-10
 

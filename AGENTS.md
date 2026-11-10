@@ -24,6 +24,7 @@ Bundle muss daher nur diese Module `require`n; eigene `node_modules` sind nicht 
 | `src/add-todo.tsx` | React-`List` mit voller Suchleiste; `↵` ruft `addTodo` |
 | `src/ot.ts` | Einzige Stelle, die `ot` aufruft; Workspace-Liste, Pfad-Auflösung, `AddResult` |
 | `assets/icon.png` | offizielles OpenTodo-Icon (siehe unten) |
+| `docs/screenshot.png` | README-Screenshot; bewusst **nicht** in `assets/` (sonst landet er im Extension-Bundle) |
 | `dist/` | gebautes Bundle, **absichtlich versioniert**, damit ein Clone direkt installierbar ist |
 | `raycast-env.d.ts` | von `ray build` generiert – nie von Hand ändern |
 | `CHANGELOG.md` | Änderungsprotokoll |
@@ -73,6 +74,10 @@ Das Repo ist **öffentlich**. Niemals committen:
 
 Der `ot`-Pfad ist eine **Preference**, kein Default im Manifest. Die Commit-E-Mail dieses Repos ist
 absichtlich die GitHub-Noreply-Adresse.
+
+`docs/screenshot.png` zeigt nur **generische Workspace-Namen** („Personal (Standard)", „Arbeit"). Bei
+einem neuen Screenshot echte Workspace-, Projekt- oder Kontonamen vor dem Commit ersetzen oder
+unkenntlich machen – das Bild ist öffentlich.
 
 Vor dem Commit prüfen:
 

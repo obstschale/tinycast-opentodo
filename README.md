@@ -1,7 +1,8 @@
 # tinycast-opentodo
 
 [Tinycast](https://tinycast.dev/)-Extension zum schnellen Hinzufügen eines Todos zu
-[Open Todo](https://open-todo.app/). Sie ruft den lokal installierten
+[Open Todo](https://open-todo.app/) – mit Blick auf die heute fälligen und überfälligen Todos des
+gewählten Workspace direkt darunter. Sie ruft den lokal installierten
 [`ot`-Client](https://open-todo.app/docs/cli/) auf:
 
 ```sh
@@ -12,7 +13,8 @@ Repository: <https://github.com/obstschale/tinycast-opentodo>
 
 ![Suchleiste in voller Breite mit geöffnetem Workspace-Dropdown](docs/screenshot.png)
 
-*Todo eintippen, mit **⌘P** den Workspace wählen, **↵** – das Todo landet direkt in Open Todo.*
+*Todo eintippen, mit **⌘P** den Workspace wählen, **↵** – das Todo landet direkt in Open Todo.
+Fällige Todos erscheinen darunter (im Screenshot noch nicht enthalten).*
 
 ## Warum ein `view`-Kommando?
 
@@ -34,8 +36,8 @@ optionalen [Quicklink-Fallback](#optional-in-der-root-suche-tippen) nutzen.
 tinycast-opentodo/
 ├── package.json          # Raycast-/Tinycast-Manifest (Kommando + Preferences)
 ├── src/
-│   ├── add-todo.tsx      # view-Kommando: Suchleiste, Workspace-Dropdown + Action
-│   └── ot.ts             # ot-Aufruf, Workspace-Liste, Pfad-Auflösung, Ergebnis
+│   ├── add-todo.tsx      # view-Kommando: Suchleiste, Dropdown, Add-Zeile + fällige Todos
+│   └── ot.ts             # ot-Aufruf, Workspaces, listDueTodos(), Pfad-Auflösung
 ├── tsconfig.json
 ├── assets/icon.png       # offizielles OpenTodo-Icon, 512×512 PNG
 ├── raycast-env.d.ts      # von `ray build` generierte Typen
@@ -100,6 +102,22 @@ Freitag Steuererklärung abgeben p1
 (siehe [`--natural`](https://open-todo.app/docs/cli/#add-and-edit)). Der Text geht als **ein** Argument
 ohne Shell an `ot` – Anführungszeichen, `$()` und Backticks werden nicht interpretiert.
 
+## Fällige Todos unter der Eingabe
+
+Unter der Eingabezeile listet die Extension die **heute fälligen und überfälligen Todos** des gerade
+gewählten Workspace auf – gelesen mit `ot today --json --workspace <id>`, überfällige zuerst. Jede Zeile
+zeigt Titel und Fälligkeit (`heute · 10.11.` bzw. `überfällig · 09.11.`).
+
+Die **Eingabe bleibt unverändert**: die erste Zeile ist immer „Todo eintippen …" bzw. der getippte
+Text, und `↵` legt weiterhin genau dieses Todo an. `selectedItemId` hält die Auswahl auf dieser Zeile,
+damit zusätzliche Zeilen das Verhalten nicht verändern. Die Todo-Zeilen darunter sind **rein zur
+Information** und haben keine Aktionen.
+
+Beim Wechsel des Workspace wird die Liste neu geladen. Ist der Server nicht erreichbar oder ist nichts
+fällig, erscheinen einfach keine zusätzlichen Zeilen – die Eingabe funktioniert trotzdem. Es werden nur
+`id`, `title` und `due` aus der Antwort gelesen; Task-Beschreibungen können Kundendaten enthalten und
+werden nie angezeigt oder gespeichert.
+
 ## Workspace-Auswahl
 
 Rechts in der Suchleiste sitzt ein **Workspace-Dropdown**. Die Liste kommt bei jedem Öffnen aus
@@ -117,7 +135,9 @@ in Tinycast zwischen den Screens, nicht in das Dropdown. Das Dropdown hat kein e
 `shortcut`-Prop, die Taste ist also nicht konfigurierbar.
 
 Beim Anlegen bekommt `ot add` ein `--workspace <id>` (ID statt Name, damit Umbenennungen nichts
-kaputtmachen). Ohne Auswahl nutzt `ot` seinen Default-Workspace.
+kaputtmachen). Ohne Auswahl nutzt `ot` seinen Default-Workspace. Das gleiche Flag bekommt
+`ot today --json`, deshalb zeigt die Liste darunter genau die Todos des gewählten Workspace und lädt
+bei einem Wechsel automatisch neu.
 
 **Offline / Server nicht erreichbar:** Die zuletzt geladene Liste wird als JSON in `LocalStorage`
 gecacht. Schlägt `ot workspaces --json` fehl, bleibt der Cache aktiv; ohne Cache wird gar kein
@@ -162,6 +182,7 @@ Es werden keine Zugangsdaten gespeichert; `ot` liest seinen Token selbst aus sei
 | `ot: …` | `ot` ist gelaufen, aber der Aufruf schlug fehl (Server nicht erreichbar, Token abgelaufen, …). `ot auth status` prüfen. |
 | `unknown workspace "…"` | Die gemerkte ID gibt es nicht mehr. Beim nächsten erfolgreichen Laden wird sie automatisch verworfen; zur Not `LocalStorage` leeren bzw. Workspace neu wählen. |
 | Dropdown fehlt | `ot workspaces --json` war nicht erreichbar und es gibt noch keinen Cache. Beim nächsten Start mit Serverkontakt erscheint es; bis dahin gilt der `ot`-Default. |
+| Keine fälligen Todos in der Liste | Nichts heute fällig/überfällig, Workspace gewechselt oder `ot today --json` nicht erreichbar. Die Eingabezeile bleibt davon unberührt. |
 | Keine Reaktion | Extensions global aus? Tinycast nach der Installation neu gestartet? |
 
 Ohne echtes Todo testen: `ot add --natural "Morgen Milch kaufen" --lang de,en --dry-run`.

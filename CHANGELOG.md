@@ -9,6 +9,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung 
 
 ### Added
 
+- Unter der Eingabezeile werden die **heute fälligen und überfälligen Todos** des gewählten Workspace
+  angezeigt (`ot today --json --workspace <id>`, überfällige zuerst, informative Zeilen ohne Aktionen).
+  Die Liste lädt bei jedem Workspace-Wechsel neu; bei offline/Fehler entfallen die Zeilen, die Eingabe
+  bleibt unverändert. Nur `id`/`title`/`due` werden gelesen, keine Task-Beschreibungen.
+- `selectedItemId="new-todo"` hält `↵` zuverlässig auf der Add-Zeile, damit die zusätzlichen Zeilen
+  das bisherige Eingabeverhalten nicht verändern.
 - Screenshot in der README (`docs/screenshot.png`): Suchleiste in voller Breite mit geöffnetem
   Workspace-Dropdown. Die Workspace-Namen im Bild sind generisch („Personal (Standard)", „Arbeit"),
   damit keine Kontodaten ins öffentliche Repo gelangen.

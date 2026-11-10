@@ -22,7 +22,7 @@ Bundle muss daher nur diese Module `require`n; eigene `node_modules` sind nicht 
 | --- | --- |
 | `package.json` | Manifest: ein `view`-Kommando `add-todo`, zwei Preferences, `version` |
 | `src/add-todo.tsx` | React-`List` mit voller Suchleiste; `↵` ruft `addTodo` |
-| `src/ot.ts` | Einzige Stelle, die `ot` aufruft; Workspace-Liste, Pfad-Auflösung, `AddResult` |
+| `src/ot.ts` | Einzige Stelle, die `ot` aufruft; Workspaces, `listDueTodos()`, Pfad-Auflösung, `AddResult` |
 | `assets/icon.png` | offizielles OpenTodo-Icon (siehe unten) |
 | `docs/screenshot.png` | README-Screenshot; bewusst **nicht** in `assets/` (sonst landet er im Extension-Bundle) |
 | `dist/` | gebautes Bundle, **absichtlich versioniert**, damit ein Clone direkt installierbar ist |
@@ -60,6 +60,13 @@ Anzeigetexte (`title`, `description`) sind frei änderbar. `author` ist der Owne
   erst den Cache anzeigen, dann im Hintergrund aktualisieren; leeres Ergebnis = offline, Cache behalten,
   und ohne Cache kein `--workspace` übergeben. `addTodo()` hängt `--workspace <id>` an, damit die
   Extension-Auswahl unabhängig vom `ot`-Profil-Default gilt. Niemals Workspace-Namen hardcoded.
+- **Fällige Todos:** `listDueTodos()` liest `ot today --json --workspace <id>` („due today or earlier",
+  überfällige zuerst) und normalisiert nur `id` / `title` / `due.date`. Sortierung: überfällig zuerst,
+  dann nach Datum; Tasks ohne Datum zuletzt. Die Zeilen werden **unter** der Add-Zeile angezeigt, sind
+  rein informativ (keine `actions`) und werden bei jedem Workspace-Wechsel neu geladen. `filtering={false}`
+  bleibt zwingend, weil die Suchleiste der Todo-Text ist und kein Filter. `selectedItemId="new-todo"`
+  hält `↵` auf der Add-Zeile – ohne diese Kontrolle würde eine ausgewählte Todo-Zeile die Eingabe
+  „unverändert" brechen. Kein Cache für Todos: bei offline/Fehler erscheinen einfach keine Zeilen.
 - Nach Erfolg: `closeMainWindow()` + Success-Toast. Nach Fehler: Failure-Toast und im Screen bleiben,
   damit der Text korrigiert werden kann.
 
@@ -78,6 +85,10 @@ absichtlich die GitHub-Noreply-Adresse.
 `docs/screenshot.png` zeigt nur **generische Workspace-Namen** („Personal (Standard)", „Arbeit"). Bei
 einem neuen Screenshot echte Workspace-, Projekt- oder Kontonamen vor dem Commit ersetzen oder
 unkenntlich machen – das Bild ist öffentlich.
+
+`ot today --json` liefert pro Task auch `description` / `notes_doc`, die Kundendaten, URLs und
+Zugangsdaten enthalten können. **Nur `id`, `title` und `due.date` verwenden** – nie Beschreibungen in
+Toasts, Logs, Tests, Doku oder Fehlermeldungen aufnehmen. Tests ausschließlich mit erfundenen Tasks.
 
 Vor dem Commit prüfen:
 

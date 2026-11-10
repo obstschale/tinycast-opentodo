@@ -9,7 +9,7 @@ import {
   Toast,
 } from "@raycast/api";
 import { useEffect, useState } from "react";
-import { addTodo, listWorkspaces, pickWorkspace, Workspace } from "./ot";
+import { addTodo, DueTodo, listDueTodos, listWorkspaces, pickWorkspace, Workspace } from "./ot";
 
 // `LaunchProps<T>` in this API version doesn't declare `fallbackText`, so we
 // describe just the shape we read. It is set for fallback / deeplink launches.
@@ -19,12 +19,21 @@ type Props = {
 
 const WORKSPACES_KEY = "opentodo.workspaces";
 const WORKSPACE_ID_KEY = "opentodo.workspaceId";
+const NEW_TODO_ID = "new-todo";
+
+function dueLabel(task: DueTodo): string {
+  if (!task.dueDate) return "ohne Datum";
+  const [, month, day] = task.dueDate.split("-");
+  const short = `${day}.${month}.`;
+  return task.overdue ? `überfällig · ${short}` : `heute · ${short}`;
+}
 
 /**
  * A `view` command: its search bar is the launcher's normal, full-width text
  * field (unlike the small oval chips that manifest `arguments` produce).
  * A global shortcut opens this screen ready for typing instead of running the
- * command immediately.
+ * command immediately. The first row stays the "add this todo" row; tasks due
+ * today / overdue are displayed below it, purely informational.
  */
 export default function Command(props: Props) {
   // A deeplink / quicklink may prefill the todo via `fallbackText`.
@@ -32,6 +41,8 @@ export default function Command(props: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [dueTodos, setDueTodos] = useState<DueTodo[]>([]);
+  const [isLoadingTodos, setIsLoadingTodos] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -88,6 +99,26 @@ export default function Command(props: Props) {
   const activeWorkspace = pickWorkspace(workspaces, selectedId);
   const todo = searchText.trim();
 
+  // Reload the due list whenever the selected workspace changes. An empty
+  // result (offline, or nothing due) simply hides the informational rows.
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      setIsLoadingTodos(true);
+      try {
+        const tasks = await listDueTodos(activeWorkspace?.id);
+        if (!cancelled) setDueTodos(tasks);
+      } finally {
+        if (!cancelled) setIsLoadingTodos(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeWorkspace?.id]);
+
   async function selectWorkspace(id: string) {
     setSelectedId(id);
     try {
@@ -121,10 +152,40 @@ export default function Command(props: Props) {
     }
   }
 
+  const items = [
+    <List.Item
+      key={NEW_TODO_ID}
+      id={NEW_TODO_ID}
+      icon={Icon.Plus}
+      title={todo || "Todo eintippen …"}
+      subtitle={
+        todo
+          ? `↵ → ${activeWorkspace?.name ?? "Standard-Workspace"}`
+          : "ot add --natural"
+      }
+      actions={
+        <ActionPanel>
+          <Action title="Todo hinzufügen" icon={Icon.Plus} onAction={submit} />
+        </ActionPanel>
+      }
+    />,
+    ...dueTodos.map((task) => (
+      <List.Item
+        key={task.id}
+        id={task.id}
+        icon={task.overdue ? Icon.Exclamationmark : Icon.Clock}
+        title={task.title}
+        subtitle={dueLabel(task)}
+      />
+    )),
+  ];
+
   return (
     <List
       filtering={false}
-      isLoading={isLoading}
+      isLoading={isLoading || isLoadingTodos}
+      // Keep ↵ on the "add" row: the todos below are informational only.
+      selectedItemId={NEW_TODO_ID}
       searchBarPlaceholder="Todo eintippen, z. B. Morgen Milch kaufen #home p2"
       searchText={searchText}
       onSearchTextChange={setSearchText}
@@ -148,20 +209,7 @@ export default function Command(props: Props) {
         ) : undefined
       }
     >
-      <List.Item
-        icon={Icon.Plus}
-        title={todo || "Todo eintippen …"}
-        subtitle={
-          todo
-            ? `↵ → ${activeWorkspace?.name ?? "Standard-Workspace"}`
-            : "ot add --natural"
-        }
-        actions={
-          <ActionPanel>
-            <Action title="Todo hinzufügen" icon={Icon.Plus} onAction={submit} />
-          </ActionPanel>
-        }
-      />
+      {items}
     </List>
   );
 }

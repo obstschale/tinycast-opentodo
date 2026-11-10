@@ -138,6 +138,70 @@ export function pickWorkspace(
   );
 }
 
+export interface DueTodo {
+  id: string;
+  title: string;
+  dueDate?: string;
+  overdue: boolean;
+}
+
+/** Local calendar day as YYYY-MM-DD; `ot` evaluates due dates in local time. */
+function localToday(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * Tasks due today or earlier in a workspace, overdue first.
+ * `ot today` already means "due today or earlier, overdue first"; we only
+ * normalise the shape. Only id/title/due are read — task descriptions can
+ * contain customer data and must never reach a toast, log or the repo.
+ */
+export async function listDueTodos(workspaceId?: string): Promise<DueTodo[]> {
+  const args = ["today", "--json"];
+  if (workspaceId) args.push("--workspace", workspaceId);
+
+  const result = await runOt(args);
+  if (!result || result.error || result.code !== 0) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(result.stdout);
+    if (!Array.isArray(parsed)) return [];
+
+    const today = localToday();
+    const todos: DueTodo[] = [];
+    for (const item of parsed) {
+      if (!item || typeof item !== "object") continue;
+      const entry = item as Record<string, unknown>;
+      if (typeof entry.id !== "string" || typeof entry.title !== "string") continue;
+
+      const due = entry.due;
+      const dueDate =
+        due && typeof due === "object" && typeof (due as Record<string, unknown>).date === "string"
+          ? ((due as Record<string, unknown>).date as string)
+          : undefined;
+
+      todos.push({
+        id: entry.id,
+        title: entry.title,
+        dueDate,
+        overdue: Boolean(dueDate && dueDate < today),
+      });
+    }
+
+    todos.sort((a, b) => {
+      if (a.overdue !== b.overdue) return a.overdue ? -1 : 1;
+      // Tasks without a due date (unexpected from `ot today`) go last.
+      return (a.dueDate ?? "9999-12-31").localeCompare(b.dueDate ?? "9999-12-31");
+    });
+    return todos;
+  } catch {
+    return [];
+  }
+}
+
 /** Adds one task through `ot add --natural <text> [--workspace <id>] --lang <lang>`. */
 export async function addTodo(todo: string, workspaceId?: string): Promise<AddResult> {
   const text = todo.trim();

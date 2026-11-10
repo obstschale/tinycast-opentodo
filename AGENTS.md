@@ -22,7 +22,7 @@ Bundle muss daher nur diese Module `require`n; eigene `node_modules` sind nicht 
 | --- | --- |
 | `package.json` | Manifest: ein `view`-Kommando `add-todo`, zwei Preferences, `version` |
 | `src/add-todo.tsx` | React-`List` mit voller Suchleiste; `↵` ruft `addTodo` |
-| `src/ot.ts` | Einzige Stelle, die `ot` aufruft; Workspaces, `listDueTodos()`, Pfad-Auflösung, `AddResult` |
+| `src/ot.ts` | Einzige Stelle, die `ot` aufruft; Workspaces, `listDueTodos()`, `completeTodo()`, `getServerUrl()`, `taskWebUrl()` |
 | `assets/icon.png` | offizielles OpenTodo-Icon (siehe unten) |
 | `docs/screenshot.png` | README-Screenshot; bewusst **nicht** in `assets/` (sonst landet er im Extension-Bundle) |
 | `dist/` | gebautes Bundle, **absichtlich versioniert**, damit ein Clone direkt installierbar ist |
@@ -62,11 +62,22 @@ Anzeigetexte (`title`, `description`) sind frei änderbar. `author` ist der Owne
   Extension-Auswahl unabhängig vom `ot`-Profil-Default gilt. Niemals Workspace-Namen hardcoded.
 - **Fällige Todos:** `listDueTodos()` liest `ot today --json --workspace <id>` („due today or earlier",
   überfällige zuerst) und normalisiert nur `id` / `title` / `due.date`. Sortierung: überfällig zuerst,
-  dann nach Datum; Tasks ohne Datum zuletzt. Die Zeilen werden **unter** der Add-Zeile angezeigt, sind
-  rein informativ (keine `actions`) und werden bei jedem Workspace-Wechsel neu geladen. `filtering={false}`
-  bleibt zwingend, weil die Suchleiste der Todo-Text ist und kein Filter. `selectedItemId="new-todo"`
-  hält `↵` auf der Add-Zeile – ohne diese Kontrolle würde eine ausgewählte Todo-Zeile die Eingabe
-  „unverändert" brechen. Kein Cache für Todos: bei offline/Fehler erscheinen einfach keine Zeilen.
+  dann nach Datum; Tasks ohne Datum zuletzt. Die Zeilen stehen **unter** der Add-Zeile und laden bei jedem
+  Workspace-Wechsel neu. `filtering={false}` bleibt zwingend, weil die Suchleiste der Todo-Text ist und
+  kein Filter. Kein Cache für Todos: bei offline/Fehler erscheinen einfach keine Zeilen.
+- **Auswahl & Aktionen:** Die Auswahl ist kontrolliert (`selectedItemId` + `onSelectionChange`);
+  `onSearchTextChange` setzt sie auf `new-todo` zurück, damit Tippen immer ↵ = „Todo hinzufügen" bedeutet,
+  während ↓/Maus eine Todo-Zeile wählbar macht. Jede Todo-Zeile hat ein `ActionPanel` mit genau zwei
+  Actions in dieser Reihenfolge: **↵ = `completeTodo()`** (`ot done <id>`, danach neu laden und Auswahl
+  zurück auf `new-todo`) und **⇧↵ = `openInOpenTodo()`** (`open()` auf `taskWebUrl()`). Die Reihenfolge
+  ist wichtig: Raycast/Tinycast macht Action 1 zur primären (↵) und Action 2 zur sekundären (⌘↵);
+  `shortcut={{ modifiers: ["shift"], key: "return" }}` auf Action 2 setzt ⇧↵ als Alternative. Ein
+  alternatives Shortcut wird im ⌘K-Menü nicht zwingend angezeigt. Actions immer mit deutschem Titel.
+- **Server-URL:** `getServerUrl()` läuft **lazy** nur beim Öffnen (nicht beim Start): zuerst
+  `${homedir()}/Library/Application Support/opentodo/config.json` → `profiles[default].url`, Fallback
+  `ot auth status --json` → `server` (~2 s, deshalb nie im Startup-Effekt). Die Preference `webBaseUrl`
+  gewinnt immer. `taskWebUrl(base, id)` baut `base/?task=<encodeURIComponent(id)>` (Deep-Link des
+  Web-Frontends). `open()` aus `@raycast/api` öffnet die URL.
 - Nach Erfolg: `closeMainWindow()` + Success-Toast. Nach Fehler: Failure-Toast und im Screen bleiben,
   damit der Text korrigiert werden kann.
 
@@ -88,7 +99,9 @@ unkenntlich machen – das Bild ist öffentlich.
 
 `ot today --json` liefert pro Task auch `description` / `notes_doc`, die Kundendaten, URLs und
 Zugangsdaten enthalten können. **Nur `id`, `title` und `due.date` verwenden** – nie Beschreibungen in
-Toasts, Logs, Tests, Doku oder Fehlermeldungen aufnehmen. Tests ausschließlich mit erfundenen Tasks.
+Toasts, Logs, Tests, Doku oder Fehlermeldungen aufnehmen. Dasselbe gilt für die `ot`-Config und
+`ot auth status --json`: beide enthalten Token und Account-E-Mail, gelesen wird ausschließlich `url`
+bzw. `server`. Tests ausschließlich mit erfundenen Tasks und Beispiel-URLs.
 
 Vor dem Commit prüfen:
 

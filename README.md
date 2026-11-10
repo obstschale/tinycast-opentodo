@@ -109,14 +109,30 @@ gewählten Workspace auf – gelesen mit `ot today --json --workspace <id>`, üb
 zeigt Titel und Fälligkeit (`heute · 10.11.` bzw. `überfällig · 09.11.`).
 
 Die **Eingabe bleibt unverändert**: die erste Zeile ist immer „Todo eintippen …" bzw. der getippte
-Text, und `↵` legt weiterhin genau dieses Todo an. `selectedItemId` hält die Auswahl auf dieser Zeile,
-damit zusätzliche Zeilen das Verhalten nicht verändern. Die Todo-Zeilen darunter sind **rein zur
-Information** und haben keine Aktionen.
+Text, und `↵` legt weiterhin genau dieses Todo an. Sobald man tippt, springt die Auswahl automatisch
+auf diese Zeile zurück. Mit **↓** (oder per Maus) wählt man stattdessen ein fälliges Todo aus.
 
 Beim Wechsel des Workspace wird die Liste neu geladen. Ist der Server nicht erreichbar oder ist nichts
 fällig, erscheinen einfach keine zusätzlichen Zeilen – die Eingabe funktioniert trotzdem. Es werden nur
 `id`, `title` und `due` aus der Antwort gelesen; Task-Beschreibungen können Kundendaten enthalten und
 werden nie angezeigt oder gespeichert.
+
+### Aktionen auf einem gewählten Todo
+
+| Taste | Aktion |
+| --- | --- |
+| **↵** | **Als erledigt markieren** – `ot done <id>`, danach verschwindet das Todo aus der Liste und die Auswahl springt zurück auf die Eingabe. |
+| **⇧↵** | **In Open Todo öffnen** – öffnet `<server>/?task=<id>` im Browser. |
+
+Beide Aktionen stehen zusätzlich im **⌘K-Menü** („Todo-Aktionen"). `⇧↵` ist ein alternatives Shortcut
+der zweiten Aktion; Raycast/Tinycast zeigt solche Alternativen im Aktionsmenü nicht zwingend an, sie
+funktionieren aber. Auf der zweiten Aktion liegt standardmäßig **⌘↵**, das je nach Tinycast-Version
+zusätzlich greifen kann.
+
+Die Server-URL wird erst beim Öffnen ermittelt: aus der lokalen `ot`-Config (nur das Feld `url`, sofort
+und offline) oder als Fallback aus `ot auth status --json`. Über die Preference **Web-URL von Open Todo**
+lässt sie sich überschreiben – sinnvoll, wenn die Weboberfläche unter einer anderen Adresse läuft als
+die API.
 
 ## Workspace-Auswahl
 
@@ -171,6 +187,7 @@ Der Owner-Anteil im Link ist der `author` aus `package.json`.
 | --- | --- | --- |
 | **Pfad zum `ot`-Client** | Optionaler absoluter Pfad. GUI-Apps übernehmen nicht das `PATH` des Terminals. Leer lassen → die Extension probt `ot` über `PATH` sowie `~/go/bin/bin/ot`, `~/go/bin/ot`, `/opt/homebrew/bin/ot` und `/usr/local/bin/ot`. | *(leer)* |
 | **Sprachen für `--natural`** | Wird als `--lang` übergeben, damit deutsche Formulierungen wie „morgen" erkannt werden. Englisch ist immer aktiv. Leer → ebenfalls `de,en`. | `de,en` |
+| **Web-URL von Open Todo** | Optionale Basis-URL der Weboberfläche für „In Open Todo öffnen". Leer → die Extension liest die URL aus der lokalen `ot`-Config bzw. `ot auth status --json`. Setzen, wenn Web-App und API verschiedene Adressen haben. | *(leer)* |
 
 Es werden keine Zugangsdaten gespeichert; `ot` liest seinen Token selbst aus seiner Config.
 
@@ -180,6 +197,7 @@ Es werden keine Zugangsdaten gespeichert; `ot` liest seinen Token selbst aus sei
 | --- | --- |
 | `ot nicht gefunden` | Pfad in den Einstellungen prüfen; `which ot` im Terminal vergleichen. |
 | `ot: …` | `ot` ist gelaufen, aber der Aufruf schlug fehl (Server nicht erreichbar, Token abgelaufen, …). `ot auth status` prüfen. |
+| `Nicht erledigt` / `Nicht geöffnet` | `ot done` schlug fehl, bzw. es konnte keine Server-URL ermittelt werden – dann die Preference **Web-URL von Open Todo** setzen. |
 | `unknown workspace "…"` | Die gemerkte ID gibt es nicht mehr. Beim nächsten erfolgreichen Laden wird sie automatisch verworfen; zur Not `LocalStorage` leeren bzw. Workspace neu wählen. |
 | Dropdown fehlt | `ot workspaces --json` war nicht erreichbar und es gibt noch keinen Cache. Beim nächsten Start mit Serverkontakt erscheint es; bis dahin gilt der `ot`-Default. |
 | Keine fälligen Todos in der Liste | Nichts heute fällig/überfällig, Workspace gewechselt oder `ot today --json` nicht erreichbar. Die Eingabezeile bleibt davon unberührt. |

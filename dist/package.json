@@ -56,6 +56,15 @@
       "description": "Kommagetrennte Sprachcodes, die als `--lang` an `ot add --natural` übergeben werden. Standard `de,en` (Deutsch + Englisch; Englisch ist immer aktiv). Ein leerer Wert verwendet ebenfalls `de,en`.",
       "placeholder": "de,en",
       "default": "de,en"
+    },
+    {
+      "name": "webBaseUrl",
+      "type": "textfield",
+      "required": false,
+      "title": "Web-URL von Open Todo",
+      "description": "Optionale Basis-URL der Weboberfläche, z. B. https://todo.example.com. Leer lassen, um die Server-URL aus `ot auth status --json` zu verwenden. Sinnvoll, wenn die Web-App unter einer anderen Adresse läuft als die API.",
+      "placeholder": "Leer lassen oder https://…",
+      "default": ""
     }
   ],
   "dependencies": {

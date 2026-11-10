@@ -9,12 +9,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung 
 
 ### Added
 
+- Fällige Todos sind auswählbar und haben zwei Aktionen im ⌘K-Menü: **↵ = Als erledigt markieren**
+  (`ot done <id>`, danach Liste neu laden) und **⇧↵ = In Open Todo öffnen** (`open()` auf
+  `<server>/?task=<id>`). Beim Tippen springt die Auswahl zurück auf die Eingabezeile, damit das
+  Anlegen neuer Todos unverändert bleibt.
+- Server-URL für „In Open Todo öffnen" wird lazy aus der lokalen `ot`-Config gelesen (nur `url`), mit
+  `ot auth status --json` als Fallback; neue Preference `webBaseUrl` überschreibt sie.
 - Unter der Eingabezeile werden die **heute fälligen und überfälligen Todos** des gewählten Workspace
-  angezeigt (`ot today --json --workspace <id>`, überfällige zuerst, informative Zeilen ohne Aktionen).
-  Die Liste lädt bei jedem Workspace-Wechsel neu; bei offline/Fehler entfallen die Zeilen, die Eingabe
-  bleibt unverändert. Nur `id`/`title`/`due` werden gelesen, keine Task-Beschreibungen.
-- `selectedItemId="new-todo"` hält `↵` zuverlässig auf der Add-Zeile, damit die zusätzlichen Zeilen
-  das bisherige Eingabeverhalten nicht verändern.
+  angezeigt (`ot today --json --workspace <id>`, überfällige zuerst). Die Liste lädt bei jedem
+  Workspace-Wechsel neu; bei offline/Fehler entfallen die Zeilen, die Eingabe bleibt unverändert. Nur
+  `id`/`title`/`due` werden gelesen, keine Task-Beschreibungen.
+- Kontrollierte Auswahl (`selectedItemId` + `onSelectionChange`): Start und jeder Tastendruck setzen sie
+  auf die Add-Zeile, ↓/Maus wählen ein fälliges Todo. So bleibt ↵ beim Tippen „neues Todo anlegen".
 - Screenshot in der README (`docs/screenshot.png`): Suchleiste in voller Breite mit geöffnetem
   Workspace-Dropdown. Die Workspace-Namen im Bild sind generisch („Personal (Standard)", „Arbeit"),
   damit keine Kontodaten ins öffentliche Repo gelangen.

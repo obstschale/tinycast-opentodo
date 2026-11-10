@@ -2,14 +2,26 @@ import {
   Action,
   ActionPanel,
   closeMainWindow,
+  getPreferenceValues,
   Icon,
   List,
   LocalStorage,
+  open,
   showToast,
   Toast,
 } from "@raycast/api";
 import { useEffect, useState } from "react";
-import { addTodo, DueTodo, listDueTodos, listWorkspaces, pickWorkspace, Workspace } from "./ot";
+import {
+  addTodo,
+  completeTodo,
+  DueTodo,
+  getServerUrl,
+  listDueTodos,
+  listWorkspaces,
+  pickWorkspace,
+  taskWebUrl,
+  Workspace,
+} from "./ot";
 
 // `LaunchProps<T>` in this API version doesn't declare `fallbackText`, so we
 // describe just the shape we read. It is set for fallback / deeplink launches.
@@ -17,9 +29,17 @@ type Props = {
   fallbackText?: string;
 };
 
+interface WebPreferences {
+  webBaseUrl?: string;
+}
+
 const WORKSPACES_KEY = "opentodo.workspaces";
 const WORKSPACE_ID_KEY = "opentodo.workspaceId";
 const NEW_TODO_ID = "new-todo";
+
+// The second action gets an explicit ⇧↵ shortcut; Raycast assigns ⌘↵ to the
+// second action by default, which this overrides (Tinycast honours action
+// shortcuts). ↵ always runs the first action.
 
 function dueLabel(task: DueTodo): string {
   if (!task.dueDate) return "ohne Datum";
@@ -33,7 +53,7 @@ function dueLabel(task: DueTodo): string {
  * field (unlike the small oval chips that manifest `arguments` produce).
  * A global shortcut opens this screen ready for typing instead of running the
  * command immediately. The first row stays the "add this todo" row; tasks due
- * today / overdue are displayed below it, purely informational.
+ * today / overdue are listed below it and can be selected for actions.
  */
 export default function Command(props: Props) {
   // A deeplink / quicklink may prefill the todo via `fallbackText`.
@@ -43,6 +63,7 @@ export default function Command(props: Props) {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [dueTodos, setDueTodos] = useState<DueTodo[]>([]);
   const [isLoadingTodos, setIsLoadingTodos] = useState(false);
+  const [focusedId, setFocusedId] = useState<string>(NEW_TODO_ID);
 
   useEffect(() => {
     let cancelled = false;
@@ -152,6 +173,41 @@ export default function Command(props: Props) {
     }
   }
 
+  async function markDone(id: string) {
+    const result = await completeTodo(id, activeWorkspace?.id);
+    if (!result.ok) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Nicht erledigt",
+        message: result.message,
+      });
+      return;
+    }
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Erledigt",
+      message: "Todo als erledigt markiert",
+    });
+    // Back to the input row, then reload so the completed task disappears.
+    setFocusedId(NEW_TODO_ID);
+    setDueTodos(await listDueTodos(activeWorkspace?.id));
+  }
+
+  async function openInOpenTodo(id: string) {
+    const configured = getPreferenceValues<WebPreferences>().webBaseUrl?.trim();
+    // Resolve lazily: the config read is instant, the CLI fallback is not.
+    const base = configured || (await getServerUrl());
+    if (!base) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Nicht geöffnet",
+        message: "Keine Web-URL – `ot auth status` prüfen oder in den Einstellungen setzen.",
+      });
+      return;
+    }
+    await open(taskWebUrl(base, id));
+  }
+
   const items = [
     <List.Item
       key={NEW_TODO_ID}
@@ -164,7 +220,7 @@ export default function Command(props: Props) {
           : "ot add --natural"
       }
       actions={
-        <ActionPanel>
+        <ActionPanel title="Neues Todo">
           <Action title="Todo hinzufügen" icon={Icon.Plus} onAction={submit} />
         </ActionPanel>
       }
@@ -176,6 +232,21 @@ export default function Command(props: Props) {
         icon={task.overdue ? Icon.Exclamationmark : Icon.Clock}
         title={task.title}
         subtitle={dueLabel(task)}
+        actions={
+          <ActionPanel title="Todo-Aktionen">
+            <Action
+              title="Als erledigt markieren"
+              icon={Icon.CheckCircle}
+              onAction={() => void markDone(task.id)}
+            />
+            <Action
+              title="In Open Todo öffnen"
+              icon={Icon.Globe}
+              shortcut={{ modifiers: ["shift"], key: "return" }}
+              onAction={() => void openInOpenTodo(task.id)}
+            />
+          </ActionPanel>
+        }
       />
     )),
   ];
@@ -184,11 +255,18 @@ export default function Command(props: Props) {
     <List
       filtering={false}
       isLoading={isLoading || isLoadingTodos}
-      // Keep ↵ on the "add" row: the todos below are informational only.
-      selectedItemId={NEW_TODO_ID}
+      // Typing always means "new todo": keep ↵ on the add row. Selecting a
+      // todo row is still possible via arrow keys / mouse.
+      selectedItemId={focusedId}
+      onSelectionChange={(id) => {
+        if (id) setFocusedId(id);
+      }}
       searchBarPlaceholder="Todo eintippen, z. B. Morgen Milch kaufen #home p2"
       searchText={searchText}
-      onSearchTextChange={setSearchText}
+      onSearchTextChange={(text) => {
+        setSearchText(text);
+        setFocusedId(NEW_TODO_ID);
+      }}
       searchBarAccessory={
         workspaces.length > 0 ? (
           <List.Dropdown

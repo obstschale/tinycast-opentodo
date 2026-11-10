@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer";
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { getPreferenceValues } from "@raycast/api";
 
@@ -200,6 +200,76 @@ export async function listDueTodos(workspaceId?: string): Promise<DueTodo[]> {
   } catch {
     return [];
   }
+}
+
+/** Reads the URL of the default profile from the local `ot` config (instant/offline). */
+function serverFromConfig(): string | undefined {
+  const file = `${homedir()}/Library/Application Support/opentodo/config.json`;
+  try {
+    if (!existsSync(file)) return undefined;
+    const parsed: unknown = JSON.parse(readFileSync(file, "utf8"));
+    if (!parsed || typeof parsed !== "object") return undefined;
+    const config = parsed as Record<string, unknown>;
+    const profiles = config.profiles;
+    if (!profiles || typeof profiles !== "object") return undefined;
+    const name = typeof config.default === "string" ? config.default : "default";
+    const profile = (profiles as Record<string, unknown>)[name];
+    if (!profile || typeof profile !== "object") return undefined;
+    const url = (profile as Record<string, unknown>).url;
+    if (typeof url !== "string" || !/^https?:\/\//.test(url)) return undefined;
+    return url.replace(/\/+$/, "");
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Base URL of the Open Todo web app. Prefer the local config (fast, offline);
+ * fall back to `ot auth status --json`, of which only `server` is read. Never
+ * log either document: both contain an account email and token metadata.
+ * Called lazily when the "open" action runs, so it never slows down startup.
+ */
+export async function getServerUrl(): Promise<string | undefined> {
+  const fromConfig = serverFromConfig();
+  if (fromConfig) return fromConfig;
+
+  const result = await runOt(["auth", "status", "--json"]);
+  if (!result || result.error || result.code !== 0) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(result.stdout);
+    if (!parsed || typeof parsed !== "object") return undefined;
+    const server = (parsed as Record<string, unknown>).server;
+    if (typeof server !== "string" || !/^https?:\/\//.test(server)) return undefined;
+    return server.replace(/\/+$/, "");
+  } catch {
+    return undefined;
+  }
+}
+
+/** The web app opens a task through `?task=<id>` (also `?note=` / `?project=`). */
+export function taskWebUrl(base: string, id: string): string {
+  return `${base.replace(/\/+$/, "")}/?task=${encodeURIComponent(id)}`;
+}
+
+/** Completes one task by its full id via `ot done <id>`. */
+export async function completeTodo(id: string, workspaceId?: string): Promise<AddResult> {
+  const args = ["done", id];
+  if (workspaceId) args.push("--workspace", workspaceId);
+
+  const result = await runOt(args);
+  if (!result || result.error) {
+    return {
+      ok: false,
+      message: "ot nicht gefunden – Pfad in den Extension-Einstellungen prüfen.",
+    };
+  }
+  if (result.code === 0) {
+    return { ok: true, message: "Todo als erledigt markiert" };
+  }
+  return {
+    ok: false,
+    message: firstLine(result.stderr || result.stdout) || `ot beendet mit Code ${result.code}`,
+  };
 }
 
 /** Adds one task through `ot add --natural <text> [--workspace <id>] --lang <lang>`. */

@@ -7,6 +7,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung 
 
 ## [Unreleased]
 
+_Noch keine Änderungen. Neue Features, Verhaltensänderungen und Fixes kommen hier rein._
+
+## [0.3.0] – 2026-11-10
+
 ### Added
 
 - Fällige Todos sind auswählbar und haben zwei Aktionen im ⌘K-Menü: **↵ = Als erledigt markieren**
@@ -64,6 +68,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung 
   stabil, um Shortcuts und Preferences nicht zu verwaisen.
 - Kein hartkodierter lokaler Pfad mehr im Manifest; `author` ist der öffentliche GitHub-Handle.
 
-[Unreleased]: https://github.com/obstschale/tinycast-opentodo/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/obstschale/tinycast-opentodo/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/obstschale/tinycast-opentodo/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/obstschale/tinycast-opentodo/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/obstschale/tinycast-opentodo/releases/tag/v0.1.0

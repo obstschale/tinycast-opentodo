@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "opentodo-quick-add",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "title": "Open Todo Quick Add",
   "description": "Fügt ein Todo aus dem Tinycast-Launcher per `ot add --natural` zu Open Todo hinzu.",
   "icon": "icon.png",

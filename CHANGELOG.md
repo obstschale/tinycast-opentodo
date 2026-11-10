@@ -7,7 +7,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung 
 
 ## [Unreleased]
 
-_Noch keine Änderungen. Neue Features, Verhaltensänderungen und Fixes kommen hier rein._
+### Added
+
+- Workspace-Dropdown in der Suchleiste: Liste kommt dynamisch aus `ot workspaces --json`, der
+  Default-Workspace ist markiert, neue Workspaces erscheinen ohne Konfiguration.
+- Auswahl wird in `LocalStorage` gemerkt und beim nächsten Start wiederhergestellt; Workspace-Liste
+  wird als Cache gespeichert, damit die Extension auch offline nutzbar bleibt.
+- `ot add` erhält `--workspace <id>` für den gewählten Workspace; aktiver Workspace erscheint im
+  Untertitel der Zeile und in der Erfolgs-Toast.
 
 ## [0.1.0] – 2026-11-10
 

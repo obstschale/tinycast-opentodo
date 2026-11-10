@@ -22,7 +22,7 @@ Bundle muss daher nur diese Module `require`n; eigene `node_modules` sind nicht 
 | --- | --- |
 | `package.json` | Manifest: ein `view`-Kommando `add-todo`, zwei Preferences |
 | `src/add-todo.tsx` | React-`List` mit voller Suchleiste; `↵` ruft `addTodo` |
-| `src/ot.ts` | Einzige Stelle, die `ot` aufruft; Pfad-Auflösung und Ergebnis-Typ `AddResult` |
+| `src/ot.ts` | Einzige Stelle, die `ot` aufruft; Workspace-Liste, Pfad-Auflösung, `AddResult` |
 | `assets/icon.png` | offizielles OpenTodo-Icon (siehe unten) |
 | `dist/` | gebautes Bundle, **absichtlich versioniert**, damit ein Clone direkt installierbar ist |
 | `raycast-env.d.ts` | von `ray build` generiert – nie von Hand ändern |
@@ -52,6 +52,13 @@ Anzeigetexte (`title`, `description`) sind frei änderbar. `author` ist der Owne
   würden deutsche Formulierungen wie „morgen" nicht erkannt.
 - **`ot`-Pfad:** GUI-Apps erben nicht das Terminal-`PATH`. Der Manifest-Default bleibt **leer**;
   `src/ot.ts` probt `ot` auf `PATH` sowie übliche Orte. Ein konfigurierter absoluter Pfad gewinnt.
+- **Workspaces:** `listWorkspaces()` liest `ot workspaces --json` (nur `id`/`name`/`default`),
+  `pickWorkspace()` liefert gemerkte Auswahl → Default → erstes Element. Die Auswahl liegt als **ID**
+  in `LocalStorage` (`opentodo.workspaceId`), die Liste als JSON-String (`opentodo.workspaces`);
+  `LocalStorage.Value` erlaubt nur Skalare, also keine Objekte/Arrays direkt speichern. Beim Öffnen
+  erst den Cache anzeigen, dann im Hintergrund aktualisieren; leeres Ergebnis = offline, Cache behalten,
+  und ohne Cache kein `--workspace` übergeben. `addTodo()` hängt `--workspace <id>` an, damit die
+  Extension-Auswahl unabhängig vom `ot`-Profil-Default gilt. Niemals Workspace-Namen hardcoded.
 - Nach Erfolg: `closeMainWindow()` + Success-Toast. Nach Fehler: Failure-Toast und im Screen bleiben,
   damit der Text korrigiert werden kann.
 

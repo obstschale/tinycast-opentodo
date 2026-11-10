@@ -24,7 +24,7 @@
       "name": "add-todo",
       "title": "Todo hinzufügen",
       "subtitle": "Open Todo",
-      "description": "Öffnet eine Suchleiste in voller Breite und fügt den eingetippten Text per `ot add --natural` zu Open Todo hinzu. Unterstützt #Projekt, @Label, p1–p4, morgen, every … und remind me …",
+      "description": "Öffnet eine Suchleiste in voller Breite mit Workspace-Dropdown und fügt den eingetippten Text per `ot add --natural --workspace` zu Open Todo hinzu. Unterstützt #Projekt, @Label, p1–p4, morgen, every … und remind me …",
       "mode": "view",
       "keywords": [
         "todo",
@@ -32,7 +32,8 @@
         "task",
         "ot",
         "open todo",
-        "quick add"
+        "quick add",
+        "workspace"
       ]
     }
   ],

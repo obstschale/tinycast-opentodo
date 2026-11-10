@@ -5,7 +5,7 @@
 [`ot`-Client](https://open-todo.app/docs/cli/) auf:
 
 ```sh
-ot add --natural "<deine Eingabe>" --lang de,en
+ot add --natural "<deine Eingabe>" --workspace <workspace-id> --lang de,en
 ```
 
 Repository: <https://github.com/obstschale/tinycast-opentodo>
@@ -30,8 +30,8 @@ optionalen [Quicklink-Fallback](#optional-in-der-root-suche-tippen) nutzen.
 tinycast-opentodo/
 ├── package.json          # Raycast-/Tinycast-Manifest (Kommando + Preferences)
 ├── src/
-│   ├── add-todo.tsx      # view-Kommando: Suchleiste + Action
-│   └── ot.ts             # ot-Aufruf, Pfad-Auflösung, Ergebnis
+│   ├── add-todo.tsx      # view-Kommando: Suchleiste, Workspace-Dropdown + Action
+│   └── ot.ts             # ot-Aufruf, Workspace-Liste, Pfad-Auflösung, Ergebnis
 ├── tsconfig.json
 ├── assets/icon.png       # offizielles OpenTodo-Icon, 512×512 PNG
 ├── raycast-env.d.ts      # von `ray build` generierte Typen
@@ -77,7 +77,8 @@ Alternativ (entspricht demselben Kopiervorgang) den Inhalt von `dist/` direkt do
 
 **Mit Shortcut (empfohlen):** In `Einstellungen → Extensions → Open Todo Quick Add` dem Kommando
 „Todo hinzufügen" einen Shortcut geben. Drücken → der Launcher öffnet sich mit fokussierter Suchleiste →
-Todo eintippen → `↵`. Danach schließt sich das Fenster und eine Toast bestätigt (oder meldet den Fehler).
+bei Bedarf rechts im Suchfeld den Workspace wählen → Todo eintippen → `↵`. Danach schließt sich das
+Fenster und eine Toast bestätigt (oder meldet den Fehler).
 
 **Ohne Shortcut:** Im Launcher `Todo` suchen, „Todo hinzufügen" mit `↵` öffnen, dann Todo eintippen und
 `↵`.
@@ -94,6 +95,27 @@ Freitag Steuererklärung abgeben p1
 `#projekt`, `@label`, `p1`–`p4`, `morgen`/`tomorrow`, `every …`, `remind me …`, `+30m` usw. parst `ot`
 (siehe [`--natural`](https://open-todo.app/docs/cli/#add-and-edit)). Der Text geht als **ein** Argument
 ohne Shell an `ot` – Anführungszeichen, `$()` und Backticks werden nicht interpretiert.
+
+## Workspace-Auswahl
+
+Rechts in der Suchleiste sitzt ein **Workspace-Dropdown**. Die Liste kommt bei jedem Öffnen aus
+`ot workspaces --json` (nur lesend, ~65 ms) – es muss nichts konfiguriert werden, und neue Workspaces
+erscheinen automatisch. Der als `default` markierte Workspace ist mit „(Standard)" beschriftet und ist
+die Vorauswahl.
+
+Die **letzte Auswahl wird in `LocalStorage` gemerkt** und beim nächsten Start wiederhergestellt. Im
+Normalfall tippst du also einfach los; nur beim Wechsel einmal das Dropdown antippen. Der aktive
+Workspace steht zusätzlich im Untertitel der Zeile und in der Erfolgs-Toast.
+
+Beim Anlegen bekommt `ot add` ein `--workspace <id>` (ID statt Name, damit Umbenennungen nichts
+kaputtmachen). Ohne Auswahl nutzt `ot` seinen Default-Workspace.
+
+**Offline / Server nicht erreichbar:** Die zuletzt geladene Liste wird als JSON in `LocalStorage`
+gecacht. Schlägt `ot workspaces --json` fehl, bleibt der Cache aktiv; ohne Cache wird gar kein
+`--workspace` übergeben. Eine Auswahl, die es nicht mehr gibt, wird beim nächsten erfolgreichen Laden
+verworfen und auf den Default zurückgesetzt.
+
+Storage-Keys: `opentodo.workspaces` (JSON-Array) und `opentodo.workspaceId`.
 
 ## Optional: in der Root-Suche tippen
 
@@ -129,6 +151,8 @@ Es werden keine Zugangsdaten gespeichert; `ot` liest seinen Token selbst aus sei
 | --- | --- |
 | `ot nicht gefunden` | Pfad in den Einstellungen prüfen; `which ot` im Terminal vergleichen. |
 | `ot: …` | `ot` ist gelaufen, aber der Aufruf schlug fehl (Server nicht erreichbar, Token abgelaufen, …). `ot auth status` prüfen. |
+| `unknown workspace "…"` | Die gemerkte ID gibt es nicht mehr. Beim nächsten erfolgreichen Laden wird sie automatisch verworfen; zur Not `LocalStorage` leeren bzw. Workspace neu wählen. |
+| Dropdown fehlt | `ot workspaces --json` war nicht erreichbar und es gibt noch keinen Cache. Beim nächsten Start mit Serverkontakt erscheint es; bis dahin gilt der `ot`-Default. |
 | Keine Reaktion | Extensions global aus? Tinycast nach der Installation neu gestartet? |
 
 Ohne echtes Todo testen: `ot add --natural "Morgen Milch kaufen" --lang de,en --dry-run`.

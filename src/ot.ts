@@ -9,6 +9,12 @@ interface Preferences {
   lang: string;
 }
 
+export interface Workspace {
+  id: string;
+  name: string;
+  default: boolean;
+}
+
 interface RunResult {
   code: number | null;
   stdout: string;
@@ -77,12 +83,63 @@ function otCandidates(configured?: string): string[] {
   return unique;
 }
 
+/** Runs the first available `ot` binary with the given arguments. */
+async function runOt(args: string[]): Promise<RunResult | undefined> {
+  const preferences = getPreferenceValues<Preferences>() ?? ({} as Preferences);
+  let result: RunResult | undefined;
+  for (const binary of otCandidates(preferences.otPath)) {
+    result = await run(binary, args);
+    // A spawn error means "binary not here" -> try the next candidate.
+    // A non-zero exit code still means ot ran, so don't retry.
+    if (!result.error) break;
+  }
+  return result;
+}
+
 function firstLine(value: string): string {
   return value.trim().split("\n")[0]?.trim() ?? "";
 }
 
-/** Adds one task through `ot add --natural <text> --lang <lang>`. */
-export async function addTodo(todo: string): Promise<AddResult> {
+/** Reads the account's workspaces. Returns [] on any failure (e.g. offline). */
+export async function listWorkspaces(): Promise<Workspace[]> {
+  const result = await runOt(["workspaces", "--json"]);
+  if (!result || result.error || result.code !== 0) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(result.stdout);
+    if (!Array.isArray(parsed)) return [];
+
+    const workspaces: Workspace[] = [];
+    for (const item of parsed) {
+      if (!item || typeof item !== "object") continue;
+      const entry = item as Record<string, unknown>;
+      if (typeof entry.id !== "string" || typeof entry.name !== "string") continue;
+      workspaces.push({
+        id: entry.id,
+        name: entry.name,
+        default: entry.default === true,
+      });
+    }
+    return workspaces;
+  } catch {
+    return [];
+  }
+}
+
+/** The remembered workspace, else the account default, else the first one. */
+export function pickWorkspace(
+  workspaces: Workspace[],
+  selectedId?: string,
+): Workspace | undefined {
+  return (
+    workspaces.find((workspace) => workspace.id === selectedId) ??
+    workspaces.find((workspace) => workspace.default) ??
+    workspaces[0]
+  );
+}
+
+/** Adds one task through `ot add --natural <text> [--workspace <id>] --lang <lang>`. */
+export async function addTodo(todo: string, workspaceId?: string): Promise<AddResult> {
   const text = todo.trim();
   if (!text) {
     return { ok: false, message: "Bitte ein Todo eintippen." };
@@ -91,19 +148,15 @@ export async function addTodo(todo: string): Promise<AddResult> {
   const preferences = getPreferenceValues<Preferences>() ?? ({} as Preferences);
 
   const args = ["add", "--natural", text];
+  if (workspaceId) {
+    args.push("--workspace", workspaceId);
+  }
   // Fall back to de,en so German quick-add phrases work even when a runtime
   // doesn't apply the manifest's default preference value.
   const lang = preferences.lang?.trim() || "de,en";
   args.push("--lang", lang);
 
-  let result: RunResult | undefined;
-  for (const binary of otCandidates(preferences.otPath)) {
-    result = await run(binary, args);
-    // A spawn error means "binary not here" -> try the next candidate.
-    // A non-zero exit code still means ot ran, so don't retry.
-    if (!result.error) break;
-  }
-
+  const result = await runOt(args);
   if (!result || result.error) {
     return {
       ok: false,
